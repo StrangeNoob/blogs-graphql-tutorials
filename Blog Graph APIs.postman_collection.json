@@ -1,0 +1,343 @@
+{
+	"info": {
+		"_postman_id": "5947c0fb-9c78-44ae-9f33-00c621169113",
+		"name": "Blog Graph APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8796429"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    login(\n        username: \"strangen00b\",\n        password: \"prats@207\"\n    ) \n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    createUser(\n        username: \"strangen00b\",\n        password: \"prats@207\"\n    ) {\n        _id\n        username\n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "Create New Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDlmNDljYzI4YjkwNTM4YjU3MDU3NTkiLCJpYXQiOjE2ODgxNjA5OTl9.ozHq07VDVaCbGMqcN_VjSGwn5-r4hgjwOuWYl4r5B_E",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    createPost(\n        title:\"Initial Commit\",\n        content: \"Loren Epsum\"\n    ) {\n        _id\n        title\n        content\n        author {\n            _id\n            username\n        }\n        comments {\n            _id\n            content\n        }\n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDlmNDljYzI4YjkwNTM4YjU3MDU3NTkiLCJpYXQiOjE2ODgxNjA5OTl9.ozHq07VDVaCbGMqcN_VjSGwn5-r4hgjwOuWYl4r5B_E",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    updatePost(\n        _id: \"649f442cbb8162545c36d42b\",\n        title: \"Hello World\",\n        content: \"This is my First Blog\"\n    ) {\n        _id\n        title\n        content\n        comments {\n            _id\n            content\n        }\n        author {\n            _id\n            username\n        }\n    }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/graphql",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    deletePost(\n        _id:\"649f4b46db72cd111b430099\"\n    )\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Posts",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n    posts {\n        _id\n        author {\n            _id\n            username\n        }\n        content\n        title\n        comments {\n            _id\n            content\n        }\n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n    post(\n        _id: \"649f4b46db72cd111b430099\"\n    ) {\n        _id\n        author {\n            _id\n            username\n        }\n        content\n        title\n        comments {\n            _id\n            content\n        }\n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDlmNDljYzI4YjkwNTM4YjU3MDU3NTkiLCJpYXQiOjE2ODgxNjA5OTl9.ozHq07VDVaCbGMqcN_VjSGwn5-r4hgjwOuWYl4r5B_E",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "Create Comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDlmNDljYzI4YjkwNTM4YjU3MDU3NTkiLCJpYXQiOjE2ODgxNjA5OTl9.ozHq07VDVaCbGMqcN_VjSGwn5-r4hgjwOuWYl4r5B_E",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n    createComment(\n        postId:\"649f4b46db72cd111b430099\",\n        content:\"Nice Blog\"\n    ) {\n        _id\n        content\n        post{\n            _id\n        }\n        \n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Comments on a Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n    comments(\n    postId:\"649f4b46db72cd111b430099\",\n    page:\"1\",\n    ) {\n       comments{\n           _id\n           author{\n               _id\n               username\n           }\n           content\n           \n       }\n       currentPage\n       totalComments\n       totalPages\n    }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDlmNDljYzI4YjkwNTM4YjU3MDU3NTkiLCJpYXQiOjE2ODgxNjA5OTl9.ozHq07VDVaCbGMqcN_VjSGwn5-r4hgjwOuWYl4r5B_E",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL",
+			"value": "http://localhost:8080/graphql",
+			"type": "string"
+		}
+	]
+}
