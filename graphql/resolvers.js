@@ -8,10 +8,10 @@ const resolvers = {
     posts: postController.getPosts,
     post: postController.getPostById,
     comments: commentController.getCommentsByPostId,
+    login: userController.login,
   },
   Mutation: {
     createUser: userController.createUser,
-    login: userController.login,
     createPost: postController.createPost,
     updatePost: postController.updatePost,
     deletePost: postController.deletePost,

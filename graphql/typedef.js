@@ -1,6 +1,3 @@
-const resolvers = require("./resolvers");
-const { makeExecutableSchema } = require("@graphql-tools/schema");
-
 const typeDefs = `
   type User {
     _id: ID!
@@ -34,11 +31,11 @@ const typeDefs = `
     posts: [Post!]!
     post(_id: ID!): Post
     comments(postId: ID!, page: String, limit: String): Comments
+    login(username: String!, password: String!): String
   }
 
   type Mutation {
     createUser(username: String!, password: String!): User
-    login(username: String!, password: String!): String
     createPost(title: String!, content: String!): Post
     updatePost(_id: ID!, title: String, content: String): Post
     deletePost(_id: ID!): Boolean
@@ -46,10 +43,4 @@ const typeDefs = `
   }
 `;
 
-// Create the executable schema
-const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
-});
-
-module.exports = schema;
+module.exports = typeDefs;
