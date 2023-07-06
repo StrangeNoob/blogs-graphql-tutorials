@@ -1,6 +1,7 @@
+const { GraphQLError } = require("graphql");
 const jwt = require("jsonwebtoken");
 // Authentication middleware
-function authenticate(req) {
+async function authenticate({ req }) {
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
@@ -9,7 +10,10 @@ function authenticate(req) {
       const userId = decoded.userId;
       return { userId };
     } catch (err) {
-      throw new Error("Invalid or expired token");
+      throw new GraphQLError("Invalid or expired token", {
+        extensions: { code: "UNAUTHENTICATED" },
+        path: "authenticate",
+      });
     }
   }
   return {

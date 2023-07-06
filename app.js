@@ -21,12 +21,12 @@ async function run() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: authenticate,
   });
 
   // Start the server
   const { url } = await startStandaloneServer(server, {
     listen: { port: process.env.PORT || 3000 },
+    context: authenticate,
   });
 
   console.log(`🚀  Server ready at: ${url}`);
