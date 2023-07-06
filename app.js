@@ -14,7 +14,7 @@ async function run() {
   });
 
   mongoose.connection.once("open", () => {
-    console.log("Connected to MongoDB");
+    console.log(`🚀  Connected to MongoDB`);
   });
 
   // Configure the GraphQL endpoint

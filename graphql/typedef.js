@@ -9,14 +9,21 @@ const typeDefs = `
     title: String!
     content: String!
     author: User!
-    comments: [Comment!]!
+    comments: Comments
+  }
+  
+  type Posts {
+    posts: [Post!]!
+    currentPage: String,
+    totalPages: String,
+    totalPosts: String,
   }
 
   type Comment {
     _id: ID!
     content: String!
     post: Post!
-    author: User!
+    author: User
   }
 
   type Comments {
@@ -28,7 +35,7 @@ const typeDefs = `
   }
 
   type Query {
-    posts: [Post!]!
+    posts: Posts
     post(_id: ID!): Post
     comments(postId: ID!, page: String, limit: String): Comments
     login(username: String!, password: String!): String

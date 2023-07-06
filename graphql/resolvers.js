@@ -17,6 +17,9 @@ const resolvers = {
     deletePost: postController.deletePost,
     createComment: commentController.createComment,
   },
+  Post: {
+    comments: commentController.getComments,
+  },
 };
 
 module.exports = resolvers;

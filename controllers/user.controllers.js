@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { GraphQLError } = require("graphql");
 const User = require("../models/user.models");
 
 exports.createUser = async (parent, args) => {
@@ -8,7 +9,12 @@ exports.createUser = async (parent, args) => {
   try {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ error: "Username already exists" });
+      throw new GraphQLError("Username already exists", {
+        extensions: {
+          code: "BAD_USER_INPUT",
+        },
+        path: "createUser",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -16,7 +22,16 @@ exports.createUser = async (parent, args) => {
     await user.save();
     return user;
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -26,17 +41,36 @@ exports.login = async (parent, args) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      throw new Error("Invalid username or password");
+      throw new GraphQLError("Invalid username or password", {
+        extensions: {
+          code: "BAD_USER_INPUT",
+        },
+        path: "login",
+      });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      throw new Error("Invalid username or password");
+      throw new GraphQLError("Invalid username or password", {
+        extensions: {
+          code: "BAD_USER_INPUT",
+        },
+        path: "login",
+      });
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
     return token;
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err.message, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "login",
+      });
+    } else {
+      throw err;
+    }
   }
 };

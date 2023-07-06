@@ -1,3 +1,4 @@
+const { GraphQLError } = require("graphql");
 const Comment = require("../models/comment.models");
 const Post = require("../models/post.models");
 
@@ -6,7 +7,12 @@ exports.createComment = async (parent, args, { userId }) => {
     const { postId, content } = args;
     const post = await Post.findById(postId);
     if (!post) {
-      throw new Error("Post not found");
+      throw new GraphQLError("Post not found", {
+        extensions: {
+          code: "NOT_FOUND",
+        },
+        path: "createComment",
+      });
     }
 
     const comment = new Comment({ content, post: postId, author: userId });
@@ -17,18 +23,78 @@ exports.createComment = async (parent, args, { userId }) => {
 
     return comment;
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "getComments",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
-exports.getComments = async (parent) => {
+exports.getComments = async (parent, args) => {
   try {
-    const comments = await Comment.find({
-      post: parent.id,
-    }).sort({ createdAt: -1 });
-    return comments;
+    const { _id } = parent;
+    const { page, limit } = args;
+
+    const currentPage = parseInt(page) || 1;
+    const itemsPerPage = parseInt(limit) || 10;
+    const totalComments = await Comment.countDocuments({ post: _id });
+    const totalPages = Math.ceil(totalComments / itemsPerPage);
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    const comments = await Comment.aggregate([
+      {
+        $match: {
+          post: _id,
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: itemsPerPage,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        },
+      },
+      {
+        $unwind: "$author",
+      },
+    ]);
+
+    console.log("comments", comments);
+    return {
+      comments,
+      currentPage,
+      totalPages,
+      totalComments,
+    };
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "getComments",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -37,23 +103,41 @@ exports.getCommentsByPostId = async (parent, args) => {
 
   const currentPage = parseInt(page) || 1;
   const itemsPerPage = parseInt(limit) || 10;
-  console.log({
-    postId,
-    currentPage,
-    itemsPerPage,
-  });
 
   try {
     const totalComments = await Comment.countDocuments({ post: postId });
     const totalPages = Math.ceil(totalComments / itemsPerPage);
     const skip = (currentPage - 1) * itemsPerPage;
 
-    const comments = await Comment.find({ post: postId })
-      .skip(skip)
-      .limit(itemsPerPage)
-      .sort({ createdAt: -1 })
-      .populate("author")
-      .populate("post");
+    const comments = await Comment.aggregate([
+      {
+        $match: {
+          post: postId,
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: itemsPerPage,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        },
+      },
+      {
+        $unwind: "$author",
+      },
+    ]);
 
     console.log(comments);
     return {
@@ -64,6 +148,15 @@ exports.getCommentsByPostId = async (parent, args) => {
     };
   } catch (err) {
     console.log(err);
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "getCommentsByPostId",
+      });
+    } else {
+      throw err;
+    }
   }
 };

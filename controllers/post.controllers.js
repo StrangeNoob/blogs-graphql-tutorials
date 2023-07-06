@@ -1,10 +1,30 @@
+const { GraphQLError } = require("graphql");
 const Post = require("../models/post.models");
-const User = require("../models/user.models");
 const { ObjectId } = require("mongodb");
 
 exports.getPosts = async (parent, args) => {
   try {
+    const { page, limit } = args;
+
+    const currentPage = parseInt(page) || 1;
+    const itemsPerPage = parseInt(limit) || 10;
+
+    const totalPosts = await Post.countDocuments();
+    const totalPages = Math.ceil(totalPosts / itemsPerPage);
+    const skip = (currentPage - 1) * itemsPerPage;
+
     const posts = await Post.aggregate([
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: itemsPerPage,
+      },
       {
         $lookup: {
           from: "users",
@@ -19,15 +39,50 @@ exports.getPosts = async (parent, args) => {
       {
         $lookup: {
           from: "comments",
-          localField: "comments",
-          foreignField: "_id",
+          let: { postId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$post", "$$postId"],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "author",
+                foreignField: "_id",
+                as: "author",
+              },
+            },
+            {
+              $unwind: "$author",
+            },
+          ],
           as: "comments",
         },
       },
     ]);
-    return posts;
+
+    return {
+      posts,
+      currentPage,
+      totalPages,
+      totalPosts,
+    };
   } catch (err) {
-    throw new Error("Internal server error");
+    console.log(err);
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -61,11 +116,19 @@ exports.getPostById = async (parent, args) => {
         },
       },
     ]);
-    console.log(post);
     return post;
   } catch (err) {
     console.log(err);
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -77,20 +140,48 @@ exports.createPost = async (parent, args, { userId }) => {
     userId,
   });
 
-  console.log(userId);
-
   try {
     if (!userId) {
-      throw new Error("Not authorized to create this post");
+      throw new GraphQLError("Not authorized to create this post", {
+        extensions: {
+          code: "UNAUTHORIZED",
+        },
+        path: "createPost",
+      });
     }
 
-    const post = new Post({ title, content, author: userId });
-    await post.save();
-    const populatedPost = await post.populate("author");
+    const post = await Post.create({ title, content, author: userId });
+    const [populatedPost] = await Post.aggregate([
+      {
+        $match: {
+          _id: post._id,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        },
+      },
+      {
+        $unwind: "$author",
+      },
+    ]);
     console.log(populatedPost);
     return populatedPost;
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -100,11 +191,21 @@ exports.updatePost = async (parent, args, { userId }) => {
   try {
     const post = await Post.findById(_id);
     if (!post) {
-      throw new Error("Post not found");
+      throw new GraphQLError("Post not found", {
+        extensions: {
+          code: "NOT_FOUND",
+        },
+        path: "deletePost",
+      });
     }
 
     if (post.author.toString() !== userId) {
-      throw new Error("Not authorized to update this post");
+      throw new GraphQLError("Post not found", {
+        extensions: {
+          code: "NOT_FOUND",
+        },
+        path: "deletePost",
+      });
     }
 
     if (title) {
@@ -143,14 +244,18 @@ exports.updatePost = async (parent, args, { userId }) => {
         },
       },
     ]);
-    console.log(populatedPost);
     return populatedPost;
   } catch (err) {
-    console.log(
-      "🚀 ~ file: post.controllers.js ~ line 144 ~ updatePost ~ err",
-      err
-    );
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
 
@@ -160,16 +265,35 @@ exports.deletePost = async (parent, args, { userId }) => {
   try {
     const post = await Post.findById(id);
     if (!post) {
-      throw new Error("Post not found");
+      throw new GraphQLError("Post not found", {
+        extensions: {
+          code: "NOT_FOUND",
+        },
+        path: "deletePost",
+      });
     }
 
     if (post.author.toString() !== userId) {
-      throw new Error("Not authorized to delete this post");
+      throw new GraphQLError("Not authorized to delete this post", {
+        extensions: {
+          code: "UNAUTHORIZED",
+        },
+        path: "deletePost",
+      });
     }
 
     await post.remove();
-    res.json({ success: true });
+    return true;
   } catch (err) {
-    throw new Error("Internal server error");
+    if (typeof err === Error) {
+      throw new GraphQLError(err, {
+        extensions: {
+          code: "INTERNAL_SERVER_ERROR",
+        },
+        path: "createUser",
+      });
+    } else {
+      throw err;
+    }
   }
 };
